@@ -86,7 +86,7 @@ def deal_card(hand):
 
 
 # Print players' cards. Reveal both dealer cards? Show Total?
-def print_hands(reveal, total):
+def print_hands(reveal, total=False):
     dline = "\n==================="
     print(f"\n\n{dline}")
     print("DEALER: ", end="")
