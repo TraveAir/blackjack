@@ -9,7 +9,7 @@ import os
 
 NUM_DECKS = 6
 
-STARTING_BALANCE = 1000
+STARTING_BALANCE = 100
 
 MIN_BET = 5
 
@@ -84,6 +84,8 @@ class Hand:
         self.busted = False
         self.turn_over = False
         self.blackjack = False
+        self.allow_split = False
+        self.allow_double = False
 
     def __repr__(self) -> str:
         ret = ""
@@ -92,7 +94,7 @@ class Hand:
         return ret
 
     def display(self):
-        if self.cards[1].hidden:
+        if self.cards[-1].hidden:
             tmpcard = self.cards.pop(1)
             self.cards.append(Card("?", "?", 0))
         card_size = 9
@@ -144,7 +146,7 @@ class Hand:
         print(vspacer)
         print(hspacer)
 
-        if self.cards[1].name == "?":
+        if self.cards[-1].name == "?":
             self.cards[1] = tmpcard
 
     def total(self) -> int:
@@ -159,10 +161,44 @@ class Hand:
                 total += 10
         return total
 
-    def blackjack_check(self) -> bool:
-        if self.total() == 21:
-            return True
-        return False
+    def bust_check(self):
+        if self.total() > 21:
+            self.busted = True
+            self.turn_over = True
+
+    def update_options(self):
+        self.allow_double = False
+        self.allow_split = False
+        if (len(self.cards) == 2) and (self.bet_amount <= player.balance):
+            self.allow_double = True
+            if len(player.hands) <= 4:
+                self.allow_split = self.cards[0].value == self.cards[1].value
+
+    def get_action(self) -> str:
+        s = ""
+        allowed = ["1", "2"]
+        if self.allow_double:
+            allowed.append("3")
+        if self.allow_split:
+            allowed.append("4")
+
+        for x in range(len(allowed)):
+            if x == 0:
+                s = f"{s}1) Hit\n"
+            elif x == 1:
+                s = f"{s}2) Stay\n"
+            elif x == 2:
+                s = f"{s}3) Double\n"
+            elif x == 3:
+                s = f"{s}4) Split\n"
+        print(s)
+
+        while True:
+            act = input("Choose an action: ")
+            if act in allowed:
+                return act
+            else:
+                print("Invalid action!")
 
 
 class Player:
@@ -185,17 +221,25 @@ class Player:
 
 
 def display_all_hands(total=False):
-    os.system("cls")
-    player.display_hands(total)
+    clear_screen()
+    print(f"Balance: {player.balance}")
     dealer.display_hands(total)
+    player.display_hands(total)
 
 
-def check_blackjack(person):
-    if person.hands[0].blackjack_check():
-        person.hands[0].blackjack = True
-        person.hands[0].cards[1].hidden = False
-        dealer.hand[0].turn_over = True
-        player.hand[0].turn_over = True
+def clear_screen():
+    os.system("cls")
+
+
+def check_blackjacks():
+    if (player.hands[0].total() == 21) or (dealer.hands[0].total() == 21):
+        dealer.hands[0].cards[1].hidden = False
+        dealer.hands[0].turn_over = True
+        player.hands[0].turn_over = True
+        if player.hands[0].total() == 21:
+            player.hands[0].blackjack = True
+        if dealer.hands[0].total() == 21:
+            dealer.hands[0].blackjack = True
 
 
 def start_new_game():
@@ -215,6 +259,8 @@ def start_new_game():
 
 
 def get_bet_amount():
+    clear_screen()
+    print(f"WIN STREAK: {player.streak}\n")
     print(f"Balance: {player.balance}")
     while True:
         try:
@@ -233,9 +279,149 @@ def get_bet_amount():
 
 def player_turn():
     for hand in player.hands:
+        # Give card to hand if split
+        if len(hand.cards) == 1:
+            hand.cards.append(shoe.deal())
+            if hand.total() == 21:
+                hand.turn_over = True
+        # check if player is allowed to make any moves
         while not hand.turn_over:
+            # Print all hands
+            display_all_hands()
 
-# Start of game
+            # Refresh possible actions
+            hand.update_options()
+
+            # Get player action
+            action = hand.get_action()
+
+            # Perform player action
+            if action == "1":  # Hit
+                hand.cards.append(shoe.deal())
+                hand.bust_check()
+            elif action == "2":  # Stand
+                hand.turn_over = True
+            elif action == "3":  # Double
+                # Remove extra bet from balance
+                player.balance -= hand.bet_amount
+                # Double hand bet
+                hand.bet_amount *= 2
+                # Deal one card
+                hand.cards.append(shoe.deal())
+                # End turn
+                hand.turn_over = True
+            elif action == "4":  # Split
+                # Create new hand
+                player.hands.append(Hand())
+                # Remove extra bet from balance
+                player.balance -= hand.bet_amount
+                # Add bet to new hand
+                player.hands[-1].bet_amount = hand.bet_amount
+                # Move second card to new hand
+                player.hands[-1].cards.append(hand.cards.pop(1))
+                # Deal one card to hand
+                hand.cards.append(shoe.deal())
+
+            # Check for bust
+            hand.bust_check()
+
+            # check for hand total of 21 and end turn if so
+            if hand.total() == 21:
+                hand.turn_over = True
+
+
+def dealer_turn():
+    # Check if dealer turn is necessary
+    if all(hand.busted for hand in player.hands):
+        dealer.hands[0].turn_over = True
+
+    while not dealer.hands[0].turn_over:
+        display_all_hands()
+        # Check if dealer has to hit
+        if dealer.hands[0].total() < 17:
+            time.sleep(1)
+            dealer.hands[0].cards.append(shoe.deal())
+        else:
+            # Dealer has to stand and turn is over
+            dealer.hands[0].turn_over = True
+        # Check for bust
+        dealer.hands[0].bust_check()
+
+
+def determine_outcome():
+    display_all_hands(True)
+    for hand in player.hands:
+        if len(player.hands) == 1:
+            s = ""
+        else:
+            s = f"Hand {player.hands.index(hand) + 1}: "
+
+        if (hand.blackjack) and (not dealer.hands[0].blackjack):
+            print(f"{s}BLACKJACK!")
+            player.balance += hand.bet_amount
+            player.balance += int(hand.bet_amount * 1.5)
+        elif (dealer.hands[0].blackjack) and (not hand.blackjack):
+            print(f"{s}LOSE! Dealer has blackjack!")
+        elif hand.busted:
+            print(f"{s}BUSTED! :(")
+        elif dealer.hands[0].busted:
+            print(f"{s}WIN! Dealer busted!")
+            player.balance += hand.bet_amount * 2
+        elif hand.total() > dealer.hands[0].total():
+            print(f"{s}WIN! You beat the dealer!")
+            player.balance += hand.bet_amount * 2
+        elif hand.total() < dealer.hands[0].total():
+            print(f"{s}LOSE! Dealer beat you!")
+        else:
+            print(f"{s}PUSH! You tied the dealer!")
+            player.balance += hand.bet_amount
+    input("\n\nPress Enter to continue...")
+
+
+def reset_game():
+    player.hands.clear()
+    player.hands.append(Hand())
+    dealer.hands.clear()
+    dealer.hands.append(Hand())
+
+
+def game_loop():
+    # Start game, deal initial cards
+    start_new_game()
+
+    # Check for blackjacks
+    check_blackjacks()
+
+    # ---- Player's turn ----
+
+    # Get bet amount
+    get_bet_amount()
+
+    # Give player turn
+    player_turn()
+    while not all(len(hand.cards) >= 2 for hand in player.hands):
+        player_turn()
+
+    # ---- Dealer's turn ----
+    dealer.hands[0].cards[1].hidden = False
+    dealer_turn()
+
+    # ---- End of game ----
+    determine_outcome()
+    reset_game()
+
+
+def enter_game():
+    # Enter game loop while player has money
+    while player.balance > MIN_BET:
+        tmpbal = player.balance
+        game_loop()
+        # Update win streak
+        if player.balance > tmpbal:
+            player.streak += 1
+        elif player.balance < tmpbal:
+            player.streak = 0
+
 
 # Create player and dealer
 player = Player()
@@ -244,20 +430,14 @@ dealer = Player(True)
 # Create shoe
 shoe = Shoe()
 
-# Start game, deal initial cards
-start_new_game()
 
-# Check for blackjacks
-check_blackjack(player)
-check_blackjack(dealer)
-
-# ---- Player's turn ----
-
-# Get bet amount
-get_bet_amount()
-print(f"Bet amount is: {player.hands[0].bet_amount}")
-get_bet_amount()
-print(f"Bet amount is: {player.hands[0].bet_amount}")
-
-# Give player turn
-player_turn()
+enter_game()
+while True:
+    clear_screen()
+    print("You ran out of money!")
+    if input("Would you like to rebuy? (y/n): ") == "y":
+        player.balance = STARTING_BALANCE
+        player.streak = 0
+        enter_game()
+    else:
+        break
