@@ -1,20 +1,61 @@
-Blackjack game
-This code implements a Blackjack game. The game is played with a standard deck of cards, and the rules follow standard Blackjack rules. The game begins with the player and the dealer each being dealt two cards, with one of the dealer's cards being hidden. The player can then choose to "hit" (take another card) or "stay" (keep their current hand). The player can also "double down" (double their bet and take one more card) if they have a two-card hand. Additionally, if the player is dealt two cards of the same rank, they can "split" their hand into two separate hands, with each hand receiving a second card and a second bet equal to the first. The dealer must hit until they have a total of 17 or higher, and must stay if they have a total of 17 or higher.
+Blackjack
 
-Files
-game.py: The main Python script containing the code for the game.
-Usage
-Run the game.py script to start the game.
+Introduction
+This is a command-line program that implements a simple version of Blackjack. The game is played against the computer dealer, and the objective is to have a hand with a higher total value than the dealer's, without exceeding 21. Aces can have a value of 1 or 11, and face cards have a value of 10.
 
-Rules
-The game is played with a standard deck of 52 cards.
-The goal is to get a hand with a higher total than the dealer's hand, without going over 21.
-Cards 2 through 10 are worth their face value. Jack, Queen, and King are worth 10. Ace is worth 1 or 11, whichever is more advantageous to the player.
-The player and the dealer each start with two cards. The player can see their own cards, but can only see one of the dealer's cards.
-The player can choose to "hit" (take another card) or "stay" (keep their current hand). The player can also "double down" (double their bet and take one more card) if they have a two-card hand. Additionally, if the player is dealt two cards of the same rank, they can "split" their hand into two separate hands, with each hand receiving a second card and a second bet equal to the first.
-The dealer must hit until they have a total of 17 or higher, and must stay if they have a total of 17 or higher.
-If the player's hand goes over 21, they "bust" and lose their bet.
-If the dealer's hand goes over 21, the player wins their bet.
-If the player and dealer have the same total, it is a "push" and the player keeps their bet.
-If the player's hand is closer to 21 than the dealer's hand, the player wins their bet.
-If the dealer's hand is closer to 21 than the player's hand, the player loses their bet.
+Requirements
+This program requires Python 3.7 or higher to run.
+
+How to Play
+To start the game, run the script game.py from the command line. The game will then prompt you to enter your bet amount. The minimum bet amount is 5.
+
+You will then be dealt two cards, and the dealer will be dealt one card face up and one card face down. You will have the option to hit (receive another card) or stand (keep your current hand). If you receive two cards with the same value, you will have the option to split your hand into two separate hands.
+
+Once you have decided to stand, the dealer will reveal their face-down card and continue drawing cards until their total is 17 or higher. The game will then compare your hand to the dealer's hand to determine the winner.
+
+If your hand exceeds 21, you will bust and lose your bet. If the dealer busts, you will win your bet. If your hand and the dealer's hand have the same total, the game will end in a tie (push).
+
+After each round, you will have the option to continue playing or quit the game. If you run out of money, the game will automatically end.
+
+Classes
+
+Card
+Represents a single card in a deck
+Properties:
+name: card name, printed on screen
+suit: card suit
+value: card value, 10 for face cards
+hidden: hidden flag for dealer's second card
+
+Shoe
+Represents a shoe (i.e., multiple decks) of cards
+Properties:
+cards: list of cards in shoe
+Methods:
+build(): builds shoe with NUM_DECKS decks of cards
+shuffle(): shuffles the shoe
+display(): displays shoe for debugging
+size(): gets the size of the shoe
+deal(): deals the first card in the shoe
+clear(): clears all cards in the shoe
+
+Hand
+Represents a single playable hand
+Properties:
+cards: list of cards in hand
+bet_amount: bet amount for hand
+busted: flag for whether the hand has busted (i.e., total value exceeds 21)
+turn_over: flag for whether the hand's turn is over (i.e., player has stood or hand has busted)
+blackjack: flag for whether the hand has a Blackjack (i.e., initial two cards have a total value of 21)
+allow_split: flag for whether the hand can be split
+allow_double: flag for whether the hand can be doubled down
+Methods:
+display(): displays all cards in hand via ASCII art
+total(): gets the total value of the hand
+
+Variables
+NUM_DECKS: number of decks in shoe
+STARTING_BALANCE: starting balance for player
+MIN_BET: minimum bet amount
+CARD_SUITS: list of card suits
+CARD_NAMES: list of card names
