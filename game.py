@@ -5,10 +5,13 @@ Created on Tue May 9, 2023
 """
 import random
 import time
+import os
 
 NUM_DECKS = 6
 
 STARTING_BALANCE = 1000
+
+MIN_BET = 5
 
 CARD_SUITS = ["♥", "♦", "♣", "♠"]
 CARD_NAMES = [
@@ -68,7 +71,7 @@ class Shoe:
     def deal(self) -> Card:
         if not self.cards:
             raise ValueError("No cards left in shoe")
-        return shoe.cards.pop()
+        return shoe.cards.pop(0)
 
     def clear(self):
         self.cards.clear()
@@ -79,6 +82,8 @@ class Hand:
         self.cards = []
         self.bet_amount = 0
         self.busted = False
+        self.turn_over = False
+        self.blackjack = False
 
     def __repr__(self) -> str:
         ret = ""
@@ -87,6 +92,9 @@ class Hand:
         return ret
 
     def display(self):
+        if self.cards[1].hidden:
+            tmpcard = self.cards.pop(1)
+            self.cards.append(Card("?", "?", 0))
         card_size = 9
         hline = ""
         vline = "|"
@@ -136,18 +144,120 @@ class Hand:
         print(vspacer)
         print(hspacer)
 
+        if self.cards[1].name == "?":
+            self.cards[1] = tmpcard
+
+    def total(self) -> int:
+        total = 0
+        num_aces = 0
+        for card in self.cards:
+            total += card.value
+            if card.name == "Ace":
+                num_aces += 1
+        for _ in range(num_aces):
+            if total + 10 <= 21:
+                total += 10
+        return total
+
+    def blackjack_check(self) -> bool:
+        if self.total() == 21:
+            return True
+        return False
+
 
 class Player:
-    def __init__(self):
+    def __init__(self, dealer=False):
         self.hands = [Hand()]
         self.balance = STARTING_BALANCE
         self.streak = 0
+        self.name = "PLAYER"
+        if dealer:
+            self.name = "DEALER"
+
+    def display_hands(self, total=False):
+        print(f"{self.name}: ")
+        for index, hand in enumerate(self.hands):
+            if len(self.hands) > 1:
+                print(f"\tHAND {index+1}:")
+            hand.display()
+            if total:
+                print(f"\tTotal: {hand.total()}\n")
 
 
-shoe = Shoe()
+def display_all_hands(total=False):
+    os.system("cls")
+    player.display_hands(total)
+    dealer.display_hands(total)
+
+
+def check_blackjack(person):
+    if person.hands[0].blackjack_check():
+        person.hands[0].blackjack = True
+        person.hands[0].cards[1].hidden = False
+        dealer.hand[0].turn_over = True
+        player.hand[0].turn_over = True
+
+
+def start_new_game():
+    # Check Shoe size and rebuild if necessary
+    if shoe.size() < 40:
+        shoe.clear()
+        shoe.build()
+        shoe.shuffle()
+
+    # Deal initial cards
+    player.hands[0].cards.append(shoe.deal())
+    dealer.hands[0].cards.append(shoe.deal())
+    player.hands[0].cards.append(shoe.deal())
+    dealer.hands[0].cards.append(shoe.deal())
+    # Hide dealer's second card
+    dealer.hands[0].cards[1].hidden = True
+
+
+def get_bet_amount():
+    print(f"Balance: {player.balance}")
+    while True:
+        try:
+            player.hands[0].bet_amount = int(input("Enter bet amount: "))
+            if player.hands[0].bet_amount > player.balance:
+                raise ValueError("You don't have enough money!")
+            if player.hands[0].bet_amount < MIN_BET:
+                raise ValueError(f"Minimum bet is {MIN_BET}!")
+            break
+        except ValueError as e:
+            if str(e).startswith("invalid literal"):
+                e = "Please enter a valid number!"
+            print(f"Invalid bet amount: {e}")
+    player.balance -= player.hands[0].bet_amount
+
+
+def player_turn():
+    for hand in player.hands:
+        while not hand.turn_over:
+
+# Start of game
+
+# Create player and dealer
 player = Player()
-player.hands[0].cards.append(shoe.deal())
-player.hands[0].cards.append(shoe.deal())
-player.hands[0].cards.append(shoe.deal())
+dealer = Player(True)
 
-player.hands[0].display()
+# Create shoe
+shoe = Shoe()
+
+# Start game, deal initial cards
+start_new_game()
+
+# Check for blackjacks
+check_blackjack(player)
+check_blackjack(dealer)
+
+# ---- Player's turn ----
+
+# Get bet amount
+get_bet_amount()
+print(f"Bet amount is: {player.hands[0].bet_amount}")
+get_bet_amount()
+print(f"Bet amount is: {player.hands[0].bet_amount}")
+
+# Give player turn
+player_turn()
