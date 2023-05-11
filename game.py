@@ -288,10 +288,10 @@ def start_new_game():
         shoe.shuffle()
 
     # Deal initial cards
-    player.hands[0].cards.append(shoe.deal())
-    dealer.hands[0].cards.append(shoe.deal())
-    player.hands[0].cards.append(shoe.deal())
-    dealer.hands[0].cards.append(shoe.deal())
+    for _ in range(2):
+        player.hands[0].cards.append(shoe.deal())
+        dealer.hands[0].cards.append(shoe.deal())
+
     # Hide dealer's second card
     dealer.hands[0].cards[1].hidden = True
 
@@ -324,6 +324,7 @@ def player_turn():
             hand.cards.append(shoe.deal())
             if hand.total() == 21:
                 hand.turn_over = True
+
         # check if player is allowed to make any moves
         while not hand.turn_over:
             # Print all hands
