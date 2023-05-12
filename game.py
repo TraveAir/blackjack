@@ -7,6 +7,8 @@ import random
 import time
 import os
 
+import game_util
+
 # Number of decks in shoe
 NUM_DECKS = 6
 
@@ -50,8 +52,9 @@ class Card:
         return f"[{self.name} of {self.suit}] "
 
 
-# Class for shoe of cards
 class Shoe:
+    """Holds and deals cards used in the game"""
+
     def __init__(self):
         self.cards = []
         self.build()
@@ -68,11 +71,10 @@ class Shoe:
                     card = Card(name, suit, value)
                     self.cards.append(card)
 
-    # Method to shuffle shoe
     def shuffle(self):
         random.shuffle(self.cards)
 
-    # Method to display shoe for debugging
+    # Display shoe for debugging
     def display(self):
         for card in self.cards:
             print(card)
@@ -93,8 +95,9 @@ class Shoe:
         self.cards.clear()
 
 
-# Class for a single playable hand
 class Hand:
+    """Class for a single playable hand of cards"""
+
     def __init__(self):
         # Cards in hand
         self.cards = []
@@ -114,60 +117,16 @@ class Hand:
             ret += f"{card}"
         return ret
 
-    # Method display all cards in hand via ASCII art
     def display(self):
+        """Print std out all cards in hand via ASCII art"""
+        # Check for hidden card and replace with placeholder
         if self.cards[-1].hidden:
             tmpcard = self.cards.pop(1)
             self.cards.append(Card("?", "?", 0))
-        card_size = 9
-        hline = ""
-        vline = "|"
-        vspacer = ""
-        hspacer = ""
-        s = ""
 
-        for _ in range(card_size):
-            hline = f"{hline}-"
-            vline = f"{vline} "
-        vline = f"{vline}|"
+        game_util.display_hand(self.cards)
 
-        for card in self.cards:
-            vspacer = f"{vspacer}\t{vline}"
-            hspacer = f"{hspacer}\t {hline}"
-
-        print(hspacer)
-        print(vspacer)
-
-        for card in self.cards:
-            if card.name == "10":
-                s = f"{s}\t{vline[:2]}{card.name}{vline[4:]}"
-            else:
-                s = f"{s}\t{vline[:2]}{card.name[0]}{vline[3:]}"
-        print(s)
-        s = ""
-
-        print(vspacer)
-
-        for card in self.cards:
-            index = len(vline) // 2
-            s = f"{s}\t{vline[:index]}{card.suit}{vline[index+1:]}"
-        print(s)
-        s = ""
-
-        print(vspacer)
-
-        for card in self.cards:
-            index = len(vline) - 3
-            if card.name == "10":
-                s = f"{s}\t{vline[:index-1]}{card.name}{vline[index+1:]}"
-            else:
-                s = f"{s}\t{vline[:index]}{card.name[0]}{vline[index+1:]}"
-        print(s)
-        s = ""
-
-        print(vspacer)
-        print(hspacer)
-
+        # Replace placeholder card if necessary
         if self.cards[-1].name == "?":
             self.cards[1] = tmpcard
 
@@ -241,7 +200,7 @@ class Player:
         if dealer:
             self.name = "DEALER"
 
-    # Method to display all hands for player, hides HAND # if only one hand
+    # Display all hands for player, hides HAND # if only one hand
     def display_hands(self, total=False):
         print(f"{self.name}: ")
         for index, hand in enumerate(self.hands):
@@ -252,17 +211,17 @@ class Player:
                 print(f"\tTotal: {hand.total()}\n")
 
 
-# Function to display all hands for player and dealer with names
-def display_all_hands(total=False):
+# Display all hands for player and dealer with names
+def display_all_hands(show_total=False):
     clear_screen()
     print(f"Balance: {player.balance}")
-    dealer.display_hands(total)
-    player.display_hands(total)
+    dealer.display_hands(show_total)
+    player.display_hands(show_total)
 
 
-# Function to clear screen
 def clear_screen():
-    if os.name == "nt":
+    """Typically called before cards are displayed"""
+    if os.name == "nt":  # windows
         os.system("cls")
     elif os.name == "posix":
         os.system("clear")
@@ -299,8 +258,8 @@ def start_new_game():
     dealer.hands[0].cards[1].hidden = True
 
 
-# Function to get bet amount from player before their first turn
 def get_bet_amount():
+    """Prompts user for a bet amount and stores it in hand object"""
     clear_screen()
     print(f"WIN STREAK: {player.streak}\n")
     print(f"Balance: {player.balance}")
@@ -312,7 +271,7 @@ def get_bet_amount():
             if player.hands[0].bet_amount < MIN_BET:
                 raise ValueError(f"Minimum bet is {MIN_BET}!")
             break
-        except ValueError as e:  # Exception handling for invalid bet amount
+        except ValueError as e:  # Error handling for invalid bet amount
             if str(e).startswith("invalid literal"):
                 e = "Please enter a valid number!"
             print(f"Invalid bet amount: {e}")
@@ -395,7 +354,7 @@ def dealer_turn():
 
 # Function to determine outcome of game
 def determine_outcome():
-    display_all_hands(True)  # Display all hands with totals
+    display_all_hands(show_total=True)
 
     # Hide hand number if only one hand
     for hand in player.hands:
