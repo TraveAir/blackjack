@@ -15,6 +15,8 @@ class Hand:
         self.turn_over = False
         self.blackjack = False
         # Flags for allowed actions
+        self.allow_hit = True
+        self.allow_stay = True
         self.allow_split = False
         self.allow_double = False
         self.outcome = {"message": "", "bal_change": 0}
@@ -62,29 +64,35 @@ class Hand:
     def update_options(self, player):
         self.allow_double = False
         self.allow_split = False
+
         if (len(self.cards) == 2) and (self.bet_amount <= player.balance):
-            self.allow_double = True
-            if len(player.hands) <= 4:
+            # Check if aces were splt and new card is ace
+            if (len(player.hands) > 1) and (
+                self.cards[0].value == 1 and self.cards[1].value == 1
+            ):
+                self.allow_double = False
+            else:
+                self.allow_double = True
+            if len(player.hands) < 4:
                 self.allow_split = self.cards[0].value == self.cards[1].value
 
     # Method to get player action and return action number
     def get_action(self) -> str:
         s = ""
-        allowed = ["1", "2"]  # Hit, Stand are always allowed
+        allowed = []
+        if self.allow_hit:
+            allowed.append("1")
+            s = f"{s}1) Hit\n"
+        if self.allow_stay:
+            allowed.append("2")
+            s = f"{s}2) Stay\n"
         if self.allow_double:
             allowed.append("3")
+            s = f"{s}3) Double\n"
         if self.allow_split:
             allowed.append("4")
+            s = f"{s}4) Split\n"
 
-        for x in range(len(allowed)):
-            if x == 0:
-                s = f"{s}1) Hit\n"
-            elif x == 1:
-                s = f"{s}2) Stay\n"
-            elif x == 2:
-                s = f"{s}3) Double\n"
-            elif x == 3:
-                s = f"{s}4) Split\n"
         print(s)
 
         while True:  # Loop until valid action is chosen

@@ -9,6 +9,7 @@ import os
 from shoe import Shoe
 from hand import Hand
 from player import Player, STARTING_BALANCE
+from card import Card
 
 # Minimum bet amount
 MIN_BET = 5
@@ -88,14 +89,19 @@ def get_bet_amount():
 # Function to handle player's turn
 def player_turn():
     for hand in player.hands:
-        # Give card to hand if split
-        if len(hand.cards) == 1:
-            hand.cards.append(shoe.deal())
-            if hand.total() == 21:
-                hand.turn_over = True
-
-        # check if player is allowed to make any moves
         while not hand.turn_over:
+            # Give card to hand if split
+            if len(hand.cards) == 1:
+                hand.cards.append(shoe.deal())
+                if hand.total() == 21:
+                    break
+                # Check if aces were split
+                if hand.cards[0].value == 1:
+                    # Check if new card is ace
+                    if hand.cards[1].value == 1:
+                        hand.allow_hit = False
+                    else:
+                        break
             # Print all hands
             display_all_hands()
 
@@ -129,8 +135,6 @@ def player_turn():
                 player.hands[-1].bet_amount = hand.bet_amount
                 # Move second card to new hand
                 player.hands[-1].cards.append(hand.cards.pop(1))
-                # Deal one card to hand
-                hand.cards.append(shoe.deal())
 
             # Check for bust
             hand.bust_check()
