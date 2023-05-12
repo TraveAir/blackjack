@@ -1,13 +1,13 @@
 Blackjack
 
 Introduction
-This is a command-line program that implements a simple version of Blackjack. The game is played against the computer dealer, and the objective is to have a hand with a higher total value than the dealer's, without exceeding 21. Aces can have a value of 1 or 11, and face cards have a value of 10.
+This is a command-line program that implements a version of Blackjack. The game is played against the computer dealer, and the objective is to have a hand with a higher total value than the dealer's, without exceeding 21. Aces can have a value of 1 or 11, and face cards have a value of 10.
 
 Requirements
 This program requires Python 3.7 or higher to run.
 
 How to Play
-To start the game, run the script game.py from the command line. The game will then prompt you to enter your bet amount. The minimum bet amount is 5.
+To start the game, run the script game.py from the command line. The game will then prompt you to enter your bet amount. The minimum bet amount is set in the game.py file.
 
 You will then be dealt two cards, and the dealer will be dealt one card face up and one card face down. You will have the option to hit (receive another card) or stand (keep your current hand). If you receive two cards with the same value, you will have the option to split your hand into two separate hands.
 
@@ -19,43 +19,71 @@ After each round, you will have the option to continue playing or quit the game.
 
 Classes
 
-Card
-Represents a single card in a deck
-Properties:
-name: card name, printed on screen
-suit: card suit
-value: card value, 10 for face cards
-hidden: hidden flag for dealer's second card
 
-Shoe
-Represents a shoe (i.e., multiple decks) of cards
-Properties:
-cards: list of cards in shoe
+Card Class
+The Card class represents a single playing card in a standard deck of 52 cards. It is used in the Hand class for blackjack game simulation.
+
+Attributes:
+name: the name of the card, which can be a string representation of a number, a face card or an Ace.
+suit: the suit of the card, which can be Hearts, Diamonds, Clubs or Spades.
+value: the value of the card, which can be an integer from 2 to 10 for numbered cards, 10 for face cards and 1 or 11 for an Ace.
+hidden: a boolean flag indicating if the card is hidden. This flag is used for the second card of the dealer in the game of blackjack.
+
+
+
+Hand Class
+This class is used to represent a single playable blackjack hand and a dealer's hand. It contains attributes and methods to manage the cards in the hand, the bet amount, the status of the hand, and allowed actions.
+
+Attributes
+cards: A list of cards in the hand
+bet_amount: The amount of money bet on the hand
+busted: A boolean flag indicating if the hand is busted or not
+turn_over: A boolean flag indicating if the hand is over or not
+blackjack: A boolean flag indicating if the hand is a blackjack or not
+allow_hit: A boolean flag indicating if a player can hit or not
+allow_stay: A boolean flag indicating if a player can stay or not
+allow_split: A boolean flag indicating if a player can split or not
+allow_double: A boolean flag indicating if a player can double down or not
+outcome: A dictionary with two keys: "message" and "bal_change", representing the message of the outcome and the amount of money the player's balance should change after the game.
+Methods
+__init__(): Initializes the class instance with the above attributes.
+__repr__(): Returns a string representation of the hand.
+display(): Prints to the console all the cards in the hand via ASCII art.
+total(): Returns the total value of the cards in the hand.
+bust_check(): Checks if the hand is busted and sets the "busted" and "turn_over" flags accordingly.
+update_options(player): Updates the allowed action flags based on the hand and the player's status.
+get_action(): Gets the player's action and returns the action number. It loops until a valid action is chosen.
+Dependencies
+game_util: A module that provides utility functions for the game.
+card: A class that represents a single playing card.
+
+
+
+Shoe Class
+
+The Shoe class represents a container for a group of playing cards, known as a shoe. It is used in the game of blackjack for simulating card decks.
+
+Attributes:
+cards: a list of Card objects representing the cards in the shoe.
+
 Methods:
-build(): builds shoe with NUM_DECKS decks of cards
-shuffle(): shuffles the shoe
-display(): displays shoe for debugging
-size(): gets the size of the shoe
-deal(): deals the first card in the shoe
-clear(): clears all cards in the shoe
+init(): Initializes a new instance of the Shoe class, building the card deck with the specified number of decks and shuffling the cards.
+build(): Creates the shoe by adding the specified number of decks of cards to the cards list.
+shuffle(): Shuffles the cards in the shoe randomly.
+display(): Displays the cards in the shoe, primarily used for debugging purposes.
+size(): Returns the number of cards remaining in the shoe.
+deal(): Removes and returns the top card from the shoe. Raises a ValueError if the shoe is empty.
+clear(): Removes all the cards from the shoe.
 
-Hand
-Represents a single playable hand
-Properties:
-cards: list of cards in hand
-bet_amount: bet amount for hand
-busted: flag for whether the hand has busted (i.e., total value exceeds 21)
-turn_over: flag for whether the hand's turn is over (i.e., player has stood or hand has busted)
-blackjack: flag for whether the hand has a Blackjack (i.e., initial two cards have a total value of 21)
-allow_split: flag for whether the hand can be split
-allow_double: flag for whether the hand can be doubled down
-Methods:
-display(): displays all cards in hand via ASCII art
-total(): gets the total value of the hand
 
-Variables
-NUM_DECKS: number of decks in shoe
-STARTING_BALANCE: starting balance for player
-MIN_BET: minimum bet amount
-CARD_SUITS: list of card suits
-CARD_NAMES: list of card names
+
+Player Class
+This class represents a player and dealer in the Blackjack game, and contains their hands and balance.
+
+Properties
+hands: A list of Hand objects, representing the hands of the player.
+balance: A float representing the balance of the player.
+streak: An integer representing the current win streak of the player.
+name: A string representing the name of the player. If the Player object is created with dealer=True, the name is set to "DEALER", otherwise it's set to "PLAYER".
+Methods
+display_hands(total=False): Displays all hands for the player, along with their total value if total=True. If total=False, the hand totals are not displayed. If there is only one hand, the "HAND #" is not displayed.
