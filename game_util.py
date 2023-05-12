@@ -9,6 +9,15 @@ BOTTOM_RIGHT = "┛"
 SPACER = "  "
 
 
+# Alt:
+# V_BAR = "║"
+# H_BAR = "═"
+# TOP_LEFT = "╔"
+# TOP_RIGHT = "╗"
+# BOTTOM_LEFT = "╚"
+# BOTTOM_RIGHT = "╝"
+# SPACER = " "
+
 # For list of valid colors, see:
 #   https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
 BLACK_CARD_COLOR = "bright_yellow"
