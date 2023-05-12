@@ -3,212 +3,15 @@ Created on Tue May 9, 2023
 
 @author: Travis Michels
 """
-import random
 import time
 import os
 
-import game_util
-
-# Number of decks in shoe
-NUM_DECKS = 6
-
-# Starting balance for player
-STARTING_BALANCE = 100
+from shoe import Shoe
+from hand import Hand
+from player import Player, STARTING_BALANCE
 
 # Minimum bet amount
 MIN_BET = 5
-
-CARD_SUITS = ["♥", "♦", "♣", "♠"]
-CARD_NAMES = [
-    "Ace",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "Jack",
-    "Queen",
-    "King",
-]
-
-
-# Class for individual cards
-class Card:
-    def __init__(self, name, suit, value):
-        # Card name, printed on screen
-        self.name = name
-        # Card suit
-        self.suit = suit
-        # Card value, 10 for face cards
-        self.value = value
-        # Hidden flag for dealer's second card
-        self.hidden = False
-
-    def __repr__(self):
-        return f"[{self.name} of {self.suit}] "
-
-
-class Shoe:
-    """Holds and deals cards used in the game"""
-
-    def __init__(self):
-        self.cards = []
-        self.build()
-        self.shuffle()
-
-    # Build shoe with NUM_DECKS decks of cards
-    def build(self):
-        for _ in range(NUM_DECKS):
-            for suit in CARD_SUITS:
-                for index, name in enumerate(CARD_NAMES, start=1):
-                    value = index
-                    if name in ["Jack", "Queen", "King"]:
-                        value = 10
-                    card = Card(name, suit, value)
-                    self.cards.append(card)
-
-    def shuffle(self):
-        random.shuffle(self.cards)
-
-    # Display shoe for debugging
-    def display(self):
-        for card in self.cards:
-            print(card)
-
-    # Method to get size of shoe
-    def size(self) -> int:
-        return len(self.cards)
-
-    # Method to deal first card in shoe
-    def deal(self) -> Card:
-        # Checks for empty shoe (shouldn't happen)
-        if not self.cards:
-            raise ValueError("No cards left in shoe")
-        return shoe.cards.pop(0)
-
-    # Method to clear all cards in shoe
-    def clear(self):
-        self.cards.clear()
-
-
-class Hand:
-    """Class for a single playable hand of cards"""
-
-    def __init__(self):
-        # Cards in hand
-        self.cards = []
-        # Bet amount for hand
-        self.bet_amount = 0
-        # Flags for hand status
-        self.busted = False
-        self.turn_over = False
-        self.blackjack = False
-        # Flags for allowed actions
-        self.allow_split = False
-        self.allow_double = False
-
-    def __repr__(self) -> str:
-        ret = ""
-        for card in self.cards:
-            ret += f"{card}"
-        return ret
-
-    def display(self):
-        """Print std out all cards in hand via ASCII art"""
-        # Check for hidden card and replace with placeholder
-        if self.cards[-1].hidden:
-            tmpcard = self.cards.pop(1)
-            self.cards.append(Card("?", "?", 0))
-
-        game_util.display_hand(self.cards)
-
-        # Replace placeholder card if necessary
-        if self.cards[-1].name == "?":
-            self.cards[1] = tmpcard
-
-    # Method to get total value of hand
-    def total(self) -> int:
-        total = 0
-        num_aces = 0
-        for card in self.cards:
-            total += card.value
-            if card.name == "Ace":
-                num_aces += 1
-        # Check if aces should be 1 or 11
-        for _ in range(num_aces):
-            if total + 10 <= 21:
-                total += 10
-        return total
-
-    # Method to check if hand is busted and set flags
-    def bust_check(self):
-        if self.total() > 21:
-            self.busted = True
-            self.turn_over = True
-
-    # Method to update allowed action flags
-    def update_options(self):
-        self.allow_double = False
-        self.allow_split = False
-        if (len(self.cards) == 2) and (self.bet_amount <= player.balance):
-            self.allow_double = True
-            if len(player.hands) <= 4:
-                self.allow_split = self.cards[0].value == self.cards[1].value
-
-    # Method to get player action and return action number
-    def get_action(self) -> str:
-        s = ""
-        allowed = ["1", "2"]  # Hit, Stand are always allowed
-        if self.allow_double:
-            allowed.append("3")
-        if self.allow_split:
-            allowed.append("4")
-
-        for x in range(len(allowed)):
-            if x == 0:
-                s = f"{s}1) Hit\n"
-            elif x == 1:
-                s = f"{s}2) Stay\n"
-            elif x == 2:
-                s = f"{s}3) Double\n"
-            elif x == 3:
-                s = f"{s}4) Split\n"
-        print(s)
-
-        while True:  # Loop until valid action is chosen
-            act = input("Choose an action: ")
-            if act in allowed:
-                return act
-            else:
-                print("Invalid action!")
-
-
-# Class for player and dealer
-class Player:
-    def __init__(self, dealer=False):
-        # List of hands, starts with one hand
-        self.hands = [Hand()]
-        self.balance = STARTING_BALANCE
-        # Win streak counter
-        self.streak = 0
-        # Name of player displayed on screen
-        self.name = "PLAYER"
-        if dealer:
-            self.name = "DEALER"
-
-    # Display all hands for player, hides HAND # if only one hand
-    def display_hands(self, total=False):
-        print(f"{self.name}: ")
-        for index, hand in enumerate(self.hands):
-            if len(self.hands) > 1:
-                print(f"\tHAND {index+1}:")
-            hand.display()
-            if total:
-                print(f"\tTotal: {hand.total()}\n")
 
 
 # Display all hands for player and dealer with names
@@ -220,7 +23,7 @@ def display_all_hands(show_total=False):
 
 
 def clear_screen():
-    """Typically called before cards are displayed"""
+    """Clears terminal window, typically called before cards are displayed"""
     if os.name == "nt":  # windows
         os.system("cls")
     elif os.name == "posix":
@@ -264,8 +67,12 @@ def get_bet_amount():
     print(f"WIN STREAK: {player.streak}\n")
     print(f"Balance: {player.balance}")
     while True:  # Loop until valid bet amount is entered
+        inp = input("Enter bet amount: ")
+        if inp == "":
+            player.hands[0].bet_amount = MIN_BET
+            break
         try:
-            player.hands[0].bet_amount = int(input("Enter bet amount: "))
+            player.hands[0].bet_amount = int(inp)
             if player.hands[0].bet_amount > player.balance:
                 raise ValueError("You don't have enough money!")
             if player.hands[0].bet_amount < MIN_BET:
@@ -293,7 +100,7 @@ def player_turn():
             display_all_hands()
 
             # Refresh possible actions
-            hand.update_options()
+            hand.update_options(player)
 
             # Get player action
             action = hand.get_action()
@@ -352,10 +159,7 @@ def dealer_turn():
         dealer.hands[0].bust_check()
 
 
-# Function to determine outcome of game
-def determine_outcome():
-    display_all_hands(show_total=True)
-
+def determine_outcomes():
     # Hide hand number if only one hand
     for hand in player.hands:
         if len(player.hands) == 1:
@@ -365,31 +169,40 @@ def determine_outcome():
 
         # Check for player BJ win
         if (hand.blackjack) and (not dealer.hands[0].blackjack):
-            print(f"{s}BLACKJACK!")
-            player.balance += hand.bet_amount  # Return bet
-            player.balance += int(hand.bet_amount * 1.5)  # Pay 3:2
+            hand.outcome["message"] = f"{s}BLACKJACK!"
+            hand.outcome["bal_change"] += hand.bet_amount  # Return bet
+            hand.outcome["bal_change"] += int(hand.bet_amount * 1.5)  # Pay 3:2
         # Check for dealer BJ loss
         elif (dealer.hands[0].blackjack) and (not hand.blackjack):
-            print(f"{s}LOSE! Dealer has blackjack!")
+            hand.outcome["message"] = f"{s}LOSE! Dealer has blackjack!"
         # Check for player bust loss
         elif hand.busted:
-            print(f"{s}BUSTED! :(")
+            hand.outcome["message"] = f"{s}BUSTED! :("
         # Check for dealer bust win
         elif dealer.hands[0].busted:
-            print(f"{s}WIN! Dealer busted!")
-            player.balance += hand.bet_amount * 2
+            hand.outcome["message"] = f"{s}WIN! Dealer busted!"
+            hand.outcome["bal_change"] += hand.bet_amount * 2
         # Check for player win by being closer to 21
         elif hand.total() > dealer.hands[0].total():
-            print(f"{s}WIN! You beat the dealer!")
-            player.balance += hand.bet_amount * 2
+            hand.outcome["message"] = f"{s}WIN! You beat the dealer!"
+            hand.outcome["bal_change"] += hand.bet_amount * 2
         # Check for dealer win by being closer to 21
         elif hand.total() < dealer.hands[0].total():
-            print(f"{s}LOSE! Dealer beat you!")
+            hand.outcome["message"] = f"{s}LOSE! Dealer beat you!"
         # Result is a push
         else:
-            print(f"{s}PUSH! You tied the dealer!")
-            player.balance += hand.bet_amount
-    input("\n\nPress Enter to continue...")
+            hand.outcome["message"] = f"{s}PUSH! You tied the dealer!"
+            hand.outcome["bal_change"] += hand.bet_amount
+
+
+def update_balance():
+    for hand in player.hands:
+        player.balance += hand.outcome["bal_change"]
+
+
+def display_outcomes():
+    for hand in player.hands:
+        print(hand.outcome["message"])
 
 
 # Function to reset game state (clear cards, etc.), does not reset balance
@@ -424,7 +237,11 @@ def game_loop():
     dealer_turn()
 
     # ---- End of game ----
-    determine_outcome()
+    determine_outcomes()
+    update_balance()
+    display_all_hands(show_total=True)
+    display_outcomes()
+    input("\n\nPress enter to continue...")
     reset_game()
 
 
