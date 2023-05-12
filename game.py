@@ -249,35 +249,22 @@ def game_loop():
     reset_game()
 
 
-# Enter game loop after after each game until player runs out of money
-def enter_game():
-    # Enter game loop while player has money
-    while player.balance > MIN_BET:
-        tmpbal = player.balance
-        game_loop()
-        # Update win streak
-        if player.balance > tmpbal:
-            player.streak += 1
-        elif player.balance < tmpbal:
-            player.streak = 0
-
-
 # ---- Main ----
 # Create player and dealer
 player = Player()
-dealer = Player(True)
+dealer = Player(dealer=True)
 
 # Create shoe
 shoe = Shoe()
 
-# Enter game loop and rebuy if player runs out of money
-enter_game()
-while True:
-    clear_screen()
-    print("You ran out of money!")
-    if input("Would you like to rebuy? (y/n): ") == "y":
-        player.balance = STARTING_BALANCE
+# Enter game loop while player has money
+while player.balance > MIN_BET:
+    tmpbal = player.balance
+    game_loop()
+    # Update win streak
+    if player.balance > tmpbal:
+        player.streak += 1
+    elif player.balance < tmpbal:
         player.streak = 0
-        enter_game()
-    else:  # Exit game if player doesn't want to rebuy
-        break
+
+print("You ran out of money!")
