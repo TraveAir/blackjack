@@ -27,18 +27,10 @@ class Hand:
             ret += f"{card}"
         return ret
 
-    def display(self):
-        """Print std out all cards in hand via ASCII art"""
-        # Check for hidden card and replace with placeholder
-        if self.cards[-1].hidden:
-            tmpcard = self.cards.pop(1)
-            self.cards.append(Card("?", "?", 0))
-
-        game_util.display_hand(self.cards)
-
-        # Replace placeholder card if necessary
-        if self.cards[-1].name == "?":
-            self.cards[1] = tmpcard
+    def display(self, use_color=True):
+        """Print to std out all cards in hand via ASCII art"""
+        cards = [x for x in self.cards]  # copy to ensure original list is not modified
+        game_util.display_hand(cards, use_color=use_color)
 
     # Method to get total value of hand
     def total(self) -> int:
@@ -66,7 +58,7 @@ class Hand:
         self.allow_split = False
 
         if (len(self.cards) == 2) and (self.bet_amount <= player.balance):
-            # Check if aces were splt and new card is ace
+            # Check if aces were split and new card is ace
             if (len(player.hands) > 1) and (
                 self.cards[0].value == 1 and self.cards[1].value == 1
             ):
