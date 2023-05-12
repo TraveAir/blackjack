@@ -262,7 +262,10 @@ def display_all_hands(total=False):
 
 # Function to clear screen
 def clear_screen():
-    os.system("cls")
+    if os.name == "nt":
+        os.system("cls")
+    elif os.name == "posix":
+        os.system("clear")
 
 
 # Function to check for blackjacks and set flags
