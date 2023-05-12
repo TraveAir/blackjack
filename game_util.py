@@ -9,6 +9,13 @@ BOTTOM_RIGHT = "┛"
 SPACER = "  "
 
 
+# For list of valid colors, see:
+#   https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors
+BLACK_CARD_COLOR = "bright_yellow"
+RED_CARD_COLOR = "red"
+HIDDEN_CARD_COLOR = "cyan"
+
+
 def display_hand(cards: list[Card], width: int = 9, use_color: bool = True):
     """
     Print cards in a players hand, in a row, using ASCII art.
@@ -22,6 +29,7 @@ def display_hand(cards: list[Card], width: int = 9, use_color: bool = True):
 
     # helper function to wrap text in 'rich' color tags
     # it is a closure, so it has access to use_color
+    # see: https://rich.readthedocs.io/en/latest/markup.html#syntax
     def colorize_text(text: str, color: str):
         if use_color:
             return f"[bold {color}]{text}[/bold {color}]"
@@ -33,7 +41,16 @@ def display_hand(cards: list[Card], width: int = 9, use_color: bool = True):
     card_inner = f"{V_BAR}{' ' * width}{V_BAR}"
 
     # ----- make top, bottom, and inner rows -----
-    # Eg, "┏━━━━━━━━━┓  ┏━━━━━━━━━┓"
+    #
+    # Eg,
+    #   top_row:
+    #   "┏━━━━━━━━━┓  ┏━━━━━━━━━┓"
+
+    #   inner_row:
+    #   "┃         ┃  ┃         ┃"
+
+    #   bottom_row:
+    #   "┗━━━━━━━━━┛  ┗━━━━━━━━━┛"
 
     top_row = ""
     bottom_row = ""
@@ -46,7 +63,13 @@ def display_hand(cards: list[Card], width: int = 9, use_color: bool = True):
         inner_row += SPACER + colorize_text(card_inner, color)
 
     # ----- make upper and lower number rows -----
-    # Eg, "┃ 10      ┃  ┃ 10      ┃"
+    #
+    # Eg,
+    #   upper_num_row:
+    #   "┃ 10      ┃  ┃ 10      ┃"
+    #
+    #   lower_num_row:
+    #   "┃      10 ┃  ┃      10 ┃"
 
     upper_num_row = ""
     lower_num_row = ""
@@ -71,7 +94,10 @@ def display_hand(cards: list[Card], width: int = 9, use_color: bool = True):
         lower_num_row += SPACER + colorize_text(card_lower_num, color)
 
     # ----- make suit row -----
-    # Eg, "┃   ♥     ┃  ┃   ♥     ┃"
+    #
+    # Eg,
+    #   suit_row:
+    #   "┃   ♥     ┃  ┃   ♥     ┃"
 
     suit_row = ""
 
@@ -104,15 +130,18 @@ def display_hand(cards: list[Card], width: int = 9, use_color: bool = True):
 
 def get_card_color(card: Card) -> str:
     """
-    Determine color based on card suit and hidden status
-
-    See [rich docs](https://rich.readthedocs.io/en/latest/appendix/colors.html#appendix-colors)
-    for list of valid colors
+    Determine card color based on suit and hidden status
     """
 
-    color = "bright_yellow"
-    if card.suit in ["♥", "♦"]:
-        color = "red"
     if card.hidden:
-        color = "cyan"
+        return HIDDEN_CARD_COLOR
+
+    color_map = {
+        "♥": RED_CARD_COLOR,
+        "♦": RED_CARD_COLOR,
+        "♣": BLACK_CARD_COLOR,
+        "♠": BLACK_CARD_COLOR,
+    }
+
+    color = color_map.get(card.suit, BLACK_CARD_COLOR)
     return color
