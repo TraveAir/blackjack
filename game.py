@@ -9,7 +9,7 @@ import os
 from shoe import Shoe
 from hand import Hand
 from player import Player, STARTING_BALANCE
-from card import Card
+from logger import Logger
 
 # Minimum bet amount
 MIN_BET = 5
@@ -61,6 +61,8 @@ def start_new_game():
     # Hide dealer's second card
     dealer.hands[0].cards[1].hidden = True
 
+    logger.hand_number = logger.hand_number + 1
+
 
 def get_bet_amount():
     """Prompts user for a bet amount and stores it in hand object"""
@@ -70,7 +72,7 @@ def get_bet_amount():
     while True:  # Loop until valid bet amount is entered
         inp = input("Enter bet amount: ")
         if inp == "":
-            player.hands[0].bet_amount = MIN_BET
+            player.hands[0].bet_amount = 10
             break
         try:
             player.hands[0].bet_amount = int(inp)
@@ -176,32 +178,47 @@ def determine_outcomes():
             hand.outcome["message"] = f"{s}BLACKJACK!"
             hand.outcome["bal_change"] += hand.bet_amount  # Return bet
             hand.outcome["bal_change"] += int(hand.bet_amount * 1.5)  # Pay 3:2
+            logger.hand_outcome = "player_blackjack"
+            logger.win_loss = "WIN"
         # Check for dealer BJ loss
         elif (dealer.hands[0].blackjack) and (not hand.blackjack):
             hand.outcome["message"] = f"{s}LOSE! Dealer has blackjack!"
+            logger.hand_outcome = "dealer_blackjack"
+            logger.win_loss = "LOSS"
         # Check for player bust loss
         elif hand.busted:
             hand.outcome["message"] = f"{s}BUSTED! :("
+            logger.hand_outcome = "player_bust"
+            logger.win_loss = "LOSS"
         # Check for dealer bust win
         elif dealer.hands[0].busted:
             hand.outcome["message"] = f"{s}WIN! Dealer busted!"
             hand.outcome["bal_change"] += hand.bet_amount * 2
+            logger.hand_outcome = "dealer_bust"
+            logger.win_loss = "WIN"
         # Check for player win by being closer to 21
         elif hand.total() > dealer.hands[0].total():
             hand.outcome["message"] = f"{s}WIN! You beat the dealer!"
             hand.outcome["bal_change"] += hand.bet_amount * 2
+            logger.hand_outcome = "player_beat_dealer"
+            logger.win_loss = "WIN"
         # Check for dealer win by being closer to 21
         elif hand.total() < dealer.hands[0].total():
             hand.outcome["message"] = f"{s}LOSE! Dealer beat you!"
+            logger.hand_outcome = "dealer_beat_player"
+            logger.win_loss = "LOSS"
         # Result is a push
         else:
             hand.outcome["message"] = f"{s}PUSH! You tied the dealer!"
             hand.outcome["bal_change"] += hand.bet_amount
+            logger.hand_outcome = "push"
+            logger.win_loss = "PUSH"
 
 
 def update_balance():
     for hand in player.hands:
         player.balance += hand.outcome["bal_change"]
+    logger.balance = str(player.balance)
 
 
 def display_outcomes():
@@ -250,12 +267,24 @@ def game_loop():
 
 
 # ---- Main ----
+clear_screen()
+
 # Create player and dealer
 player = Player()
 dealer = Player(dealer=True)
 
 # Create shoe
 shoe = Shoe()
+
+# Ask if player wants to make a log file
+if input("Log file? (y/n)") == "y":
+    log = True
+else:
+    log = False
+
+# Create logger
+logger = Logger(log)
+
 
 # Enter game loop while player has money
 while player.balance > MIN_BET:
@@ -266,5 +295,8 @@ while player.balance > MIN_BET:
         player.streak += 1
     elif player.balance < tmpbal:
         player.streak = 0
+    logger.streak = player.streak
+    if log:
+        logger.write_to_file()
 
 print("You ran out of money!")
