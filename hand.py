@@ -1,9 +1,12 @@
 import game_util
 from card import Card
 
+# Minimum bet amount
+MIN_BET = 10
+
 
 class Hand:
-    """Class for a single playable blackjack hand and dealer hand"""
+    """Represents a single blackjack hand"""
 
     def __init__(self):
         # Cards in hand

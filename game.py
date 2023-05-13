@@ -7,17 +7,25 @@ import time
 import os
 
 from shoe import Shoe
-from hand import Hand
-from player import Player, STARTING_BALANCE
+from hand import Hand, MIN_BET
+from player import Player
 from logger import Logger
+from bot import Bot
 
-# Minimum bet amount
-MIN_BET = 10
+""" CHANGE BETWEEN HUMAN AND BOT PLAYER HERE
+    True: human player
+    False: bot player"""
+HUMAN_PLAYER = False
 
 
 # Display all hands for player and dealer with names
 def display_all_hands(show_total=False):
+    if (not HUMAN_PLAYER) and (bot.speed == 0):
+        return
     clear_screen()
+    if (not HUMAN_PLAYER) and (bot.speed > 0):
+        print(f"Playing Hand {logger.hand_number} OF {bot.max_hands}\n")
+
     print(f"Balance: {player.balance}")
     dealer.display_hands(show_total)
     player.display_hands(show_total)
@@ -45,15 +53,15 @@ def check_blackjacks():
             dealer.hands[0].blackjack = True
 
 
-# Function to create a new game, clear cards and re-deal
 def start_new_game():
+    """Called at the start of each game (round) to deal cards and reset flags"""
     # Check Shoe size and rebuild if necessary
     if shoe.size() < 40:
         shoe.clear()
         shoe.build()
         shoe.shuffle()
 
-    # Deal initial cards
+    # Deal 2 initial cards to player and dealer
     for _ in range(2):
         player.hands[0].cards.append(shoe.deal())
         dealer.hands[0].cards.append(shoe.deal())
@@ -67,6 +75,10 @@ def start_new_game():
 def get_bet_amount():
     """Prompts user for a bet amount and stores it in hand object"""
     clear_screen()
+    if not HUMAN_PLAYER:
+        player.hands[0].bet_amount = bot.choose_bet_amount(player)
+        player.balance -= player.hands[0].bet_amount
+        return
     print(f"WIN STREAK: {player.streak}\n")
     print(f"Balance: {player.balance}")
     while True:  # Loop until valid bet amount is entered
@@ -106,12 +118,17 @@ def player_turn():
                         break
             # Print all hands
             display_all_hands()
+            if not HUMAN_PLAYER:
+                time.sleep(bot.speed / 5)
 
             # Refresh possible actions
             hand.update_options(player)
 
             # Get player action
-            action = hand.get_action()
+            if not HUMAN_PLAYER:
+                action = bot.choose_hand_action(hand, dealer.hands[0].cards[0].value)
+            else:
+                action = hand.get_action()
 
             # Perform player action
             if action == "1":  # Hit
@@ -153,14 +170,22 @@ def dealer_turn():
         dealer.hands[0].turn_over = True
 
     while not dealer.hands[0].turn_over:
+        lower_total = 0
+        for card in dealer.hands[0].cards:
+            lower_total += card.value
+        upper_total = dealer.hands[0].total()
         display_all_hands()
-        # Check if dealer has to hit
-        if dealer.hands[0].total() < 17:
-            time.sleep(1)
-            dealer.hands[0].cards.append(shoe.deal())
-        else:
-            # Dealer has to stand and turn is over
+
+        if (upper_total >= 18) or (lower_total == 17 and upper_total == 17):
             dealer.hands[0].turn_over = True
+        else:
+            # Dealer has to hit
+            if HUMAN_PLAYER:
+                time.sleep(1)
+            else:
+                time.sleep(bot.speed / 5)
+            dealer.hands[0].cards.append(shoe.deal())
+
         # Check for bust
         dealer.hands[0].bust_check()
 
@@ -211,7 +236,7 @@ def determine_outcomes():
         else:
             hand.outcome["message"] = f"{s}PUSH! You tied the dealer!"
             hand.outcome["bal_change"] += hand.bet_amount
-            logger.hand_outcome = "push"
+            logger.hand_outcome = "player_tie_dealer"
             logger.win_loss = "PUSH"
 
 
@@ -222,6 +247,9 @@ def update_balance():
 
 
 def display_outcomes():
+    if (not HUMAN_PLAYER) and (bot.speed == 0):
+        print(f"Playing Hand {logger.hand_number} OF {bot.max_hands}")
+        return
     for hand in player.hands:
         print(hand.outcome["message"])
 
@@ -262,7 +290,11 @@ def game_loop():
     update_balance()
     display_all_hands(show_total=True)
     display_outcomes()
-    input("\n\nPress enter to continue...")
+
+    if HUMAN_PLAYER:
+        input("\n\nPress enter to continue...")
+    else:
+        time.sleep(bot.speed / 3)
     reset_game()
 
 
@@ -273,21 +305,27 @@ clear_screen()
 player = Player()
 dealer = Player(dealer=True)
 
+# Create bot
+bot = Bot()
+
 # Create shoe
 shoe = Shoe()
 
 # Ask if player wants to make a log file
-if input("Log file? (y/n)") == "y":
-    log = True
+if HUMAN_PLAYER:
+    if input("Log file? (y/n)") == "y":
+        log = True
+    else:
+        log = False
 else:
-    log = False
+    log = True
 
 # Create logger
-logger = Logger(log)
+logger = Logger(make_file=log, bot=bot, human_player=HUMAN_PLAYER)
 
 
 # Enter game loop while player has money
-while player.balance > MIN_BET:
+while player.balance >= MIN_BET:
     tmpbal = player.balance
     game_loop()
     # Update win streak
@@ -299,4 +337,12 @@ while player.balance > MIN_BET:
     if log:
         logger.write_to_file()
 
-print("You ran out of money!")
+    if (not HUMAN_PLAYER) and (logger.hand_number >= bot.max_hands):
+        break
+clear_screen()
+
+if player.balance < MIN_BET:
+    print("You ran out of money!")
+else:
+    print(f"Bot finished playing {bot.max_hands} hands")
+    print(f"Final balance: {player.balance}")

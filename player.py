@@ -1,5 +1,4 @@
-# Starting balance for player
-STARTING_BALANCE = 100
+STARTING_BALANCE = 1000
 
 from hand import Hand
 
