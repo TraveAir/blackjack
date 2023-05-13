@@ -5,7 +5,7 @@ BETTING_STRATEGY = "modfib"
 ACTION_STRATEGY = "basic"
 
 # Bot will stop playing after this many hands
-MAX_NUM_HANDS = 10000
+MAX_NUM_HANDS = 50000
 
 # How fast cards are displayed on screen, lower is faster, 0 is instant
 BOT_SPEED = 0
@@ -14,7 +14,7 @@ BOT_SPEED = 0
 class Bot:
     """Automated player using specified strategy
     BETTING_STRATEGY OPTIONS:
-    - flat_bet: Always bet the minimim
+    - fltbet: Always bet the minimim
     - modfib: Bet a modified fibonacci sequence: 1, 1, 2, 3, 5, 5, 7, 10
 
     ACTION_STRATEGY OPTIONS:
@@ -31,7 +31,7 @@ class Bot:
 
     def choose_bet_amount(self, player) -> int:
         """Returns bet amount based on BETTING_STRATEGY"""
-        if self.betting_strategy == "flat_bet":
+        if self.betting_strategy == "fltbet":
             """----- FLAT BET -----
             Always bet the minimum"""
             return MIN_BET
