@@ -305,9 +305,8 @@ clear_screen()
 player = Player()
 dealer = Player(dealer=True)
 
-# Create bot if not human player
-if not HUMAN_PLAYER:
-    bot = Bot()
+# Create bot
+bot = Bot()
 
 # Create shoe
 shoe = Shoe()
@@ -322,7 +321,7 @@ else:
     log = True
 
 # Create logger
-logger = Logger(log)
+logger = Logger(make_file=log, bot=bot, human_player=HUMAN_PLAYER)
 
 
 # Enter game loop while player has money

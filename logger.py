@@ -1,5 +1,6 @@
 import datetime
 import os
+from bot import Bot
 
 
 class Logger:
@@ -9,8 +10,10 @@ class Logger:
     streak = 0
     hand_number = 0
 
-    def __init__(self, make_file):
+    def __init__(self, make_file, bot, human_player):
         self.filepath = ""
+        self.human_player = human_player
+        self.bot = bot
         if make_file:
             self.filepath = self.make_file_path()
 
@@ -22,6 +25,12 @@ class Logger:
         current_time = datetime.datetime.now()
 
         file_name = current_time.strftime("%m%d.%H%M")
+        if self.human_player:
+            file_name += "_Player"
+        else:
+            file_name += (
+                f"____{self.bot.betting_strategy}____{self.bot.action_strategy}"
+            )
 
         pth = base_path + file_name
         x = 1

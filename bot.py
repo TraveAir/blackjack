@@ -5,7 +5,7 @@ BETTING_STRATEGY = "flat_bet"
 ACTION_STRATEGY = "basic"
 
 # Bot will stop playing after this many hands
-MAX_NUM_HANDS = 5000
+MAX_NUM_HANDS = 10000
 
 # How fast cards are displayed on screen, lower is faster, 0 is instant
 BOT_SPEED = 0
