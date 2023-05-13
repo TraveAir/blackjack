@@ -12,11 +12,10 @@ from player import Player
 from logger import Logger
 from bot import Bot
 
-
 """ CHANGE BETWEEN HUMAN AND BOT PLAYER HERE
     True: human player
     False: bot player"""
-HUMAN_PLAYER = True
+HUMAN_PLAYER = False
 
 
 # Display all hands for player and dealer with names
@@ -62,7 +61,7 @@ def start_new_game():
         shoe.build()
         shoe.shuffle()
 
-    # Deal initial cards
+    # Deal 2 initial cards to player and dealer
     for _ in range(2):
         player.hands[0].cards.append(shoe.deal())
         dealer.hands[0].cards.append(shoe.deal())
@@ -127,7 +126,7 @@ def player_turn():
 
             # Get player action
             if not HUMAN_PLAYER:
-                action = bot.choose_hand_action(player, hand)
+                action = bot.choose_hand_action(hand, dealer.hands[0].cards[0].value)
             else:
                 action = hand.get_action()
 
@@ -171,23 +170,22 @@ def dealer_turn():
         dealer.hands[0].turn_over = True
 
     while not dealer.hands[0].turn_over:
+        lower_total = 0
+        for card in dealer.hands[0].cards:
+            lower_total += card.value
+        upper_total = dealer.hands[0].total()
         display_all_hands()
-        if dealer.hands[0].total() >= 18:
+
+        if (upper_total >= 18) or (lower_total == 17 and upper_total == 17):
             dealer.hands[0].turn_over = True
         else:
-            tot = 0
-            for card in dealer.hands[0].cards:
-                tot += card.value
-            if (tot == 17) and (dealer.hands[0].total() == 17):
-                # Hard 17, dealer has to stand
-                dealer.hands[0].turn_over = True
+            # Dealer has to hit
+            if HUMAN_PLAYER:
+                time.sleep(1)
             else:
-                # Dealer has to hit
-                if HUMAN_PLAYER:
-                    time.sleep(1)
-                else:
-                    time.sleep(bot.speed / 5)
-                dealer.hands[0].cards.append(shoe.deal())
+                time.sleep(bot.speed / 5)
+            dealer.hands[0].cards.append(shoe.deal())
+
         # Check for bust
         dealer.hands[0].bust_check()
 
@@ -292,6 +290,7 @@ def game_loop():
     update_balance()
     display_all_hands(show_total=True)
     display_outcomes()
+
     if HUMAN_PLAYER:
         input("\n\nPress enter to continue...")
     else:
