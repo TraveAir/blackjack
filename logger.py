@@ -20,7 +20,7 @@ class Logger:
             os.makedirs(base_path)
 
         current_time = datetime.datetime.now()
-        pth = base_path + current_time.strftime("%m.%d.%H.%M.%S")
+        pth = base_path + current_time.strftime("%m.%d.%H.%M")
         x = 0
         s = ""
         while os.path.exists(pth + f"{s}.txt"):
