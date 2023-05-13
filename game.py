@@ -12,7 +12,7 @@ from player import Player, STARTING_BALANCE
 from logger import Logger
 
 # Minimum bet amount
-MIN_BET = 5
+MIN_BET = 10
 
 
 # Display all hands for player and dealer with names
