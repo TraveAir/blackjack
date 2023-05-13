@@ -20,11 +20,12 @@ class Logger:
             os.makedirs(base_path)
 
         current_time = datetime.datetime.now()
-        pth = base_path + current_time.strftime("%m.%d.%H.%M")
-        x = 0
+        pth = base_path + current_time.strftime("%m%d.%H%M")
+        x = 1
         s = ""
         while os.path.exists(pth + f"{s}.txt"):
             s = f"({x})"
+            x += 1
 
         pth += f"{s}.txt"
 

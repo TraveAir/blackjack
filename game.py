@@ -10,6 +10,7 @@ from shoe import Shoe
 from hand import Hand
 from player import Player, STARTING_BALANCE
 from logger import Logger
+from bot import Bot
 
 # Minimum bet amount
 MIN_BET = 10
@@ -211,7 +212,7 @@ def determine_outcomes():
         else:
             hand.outcome["message"] = f"{s}PUSH! You tied the dealer!"
             hand.outcome["bal_change"] += hand.bet_amount
-            logger.hand_outcome = "push"
+            logger.hand_outcome = "player_tie_dealer"
             logger.win_loss = "PUSH"
 
 
