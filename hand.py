@@ -17,6 +17,7 @@ class Hand:
         self.busted = False
         self.turn_over = False
         self.blackjack = False
+        self.insured = False
         # Flags for allowed actions
         self.allow_hit = True
         self.allow_stay = True
@@ -92,7 +93,7 @@ class Hand:
 
         while True:  # Loop until valid action is chosen
             act = input("Choose an action: ")
-            if act in allowed:
+            if act in allowed or act == "help":
                 return act
             else:
                 print("Invalid action!")

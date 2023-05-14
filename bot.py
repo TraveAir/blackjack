@@ -3,12 +3,13 @@ from card import Card
 
 BETTING_STRATEGY = "modfib"
 ACTION_STRATEGY = "basic"
+INSURANCE_STRATEGY = "never"
 
 # Bot will stop playing after this many hands
-MAX_NUM_HANDS = 50000
+MAX_NUM_HANDS = 1000
 
 # How fast cards are displayed on screen, lower is faster, 0 is instant
-BOT_SPEED = 0
+BOT_SPEED = 3
 
 
 class Bot:
@@ -21,11 +22,16 @@ class Bot:
     - dealer_hitting: Hit with 16 or less, otherwise stay
     - no_bust: Hit if no chance of busting
     - basic: Basic strategy
+
+    INSURANCE_STRATEGY OPTIONS:
+    - always: Always take insurance
+    - never: Never take insurance
     """
 
     def __init__(self):
         self.betting_strategy = BETTING_STRATEGY
         self.action_strategy = ACTION_STRATEGY
+        self.insurance_strategy = INSURANCE_STRATEGY
         self.max_hands = MAX_NUM_HANDS
         self.speed = BOT_SPEED
 
@@ -169,3 +175,11 @@ class Bot:
                 return ret_table["hit"]
         # ---DEFAULT---
         return ret_table["stay"]
+
+    def choose_insurance_action(self, hand) -> bool:
+        """Returns True or False based on INSURANCE_STRATEGY"""
+        if self.insurance_strategy == "always":
+            return True
+        else:
+            # ---DEFAULT---
+            return False

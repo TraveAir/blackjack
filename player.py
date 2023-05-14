@@ -1,4 +1,4 @@
-STARTING_BALANCE = 1000
+STARTING_BALANCE = 100
 
 from hand import Hand
 
@@ -15,9 +15,12 @@ class Player:
         if dealer:
             self.name = "DEALER"
 
+    def display_balance(self):
+        return f"${self.balance}"
+
     # Display all hands for player, hides HAND # if only one hand
     def display_hands(self, total=False):
-        print(f"{self.name}: ")
+        print(f"\n{self.name}: ")
         for index, hand in enumerate(self.hands):
             if len(self.hands) > 1:
                 print(f"\tHAND {index+1}:")

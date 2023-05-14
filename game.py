@@ -26,7 +26,30 @@ def display_all_hands(show_total=False):
     if (not HUMAN_PLAYER) and (bot.speed > 0):
         print(f"Playing Hand {logger.hand_number} OF {bot.max_hands}\n")
 
-    print(f"Balance: {player.balance}")
+    total_bet_amount = 0
+    for hand in player.hands:
+        total_bet_amount += hand.bet_amount
+
+    if dealer.hands[0].turn_over:
+        # Game over, display updated balance
+        win_loss_amount = 0
+        for hand in player.hands:
+            win_loss_amount += hand.outcome["bal_change"]
+            if win_loss_amount == 0:
+                print(f"You Lost ${total_bet_amount}! | ", end="")
+            elif (win_loss_amount - total_bet_amount) == 0:
+                print(f"Push! | ", end="")
+            else:
+                print(f"You Won ${win_loss_amount - total_bet_amount}! | ", end="")
+        print(f"New Balance: {player.display_balance()}")
+    else:
+        # Game still going, display bet amount and remaining balance
+        str = "Bet Amount"
+        if len(player.hands) > 1:
+            str = f"{str} (Per Hand):"
+        print(f"{str} ${player.hands[0].bet_amount} | ", end="")
+        print(f"Remaining Balance: {player.display_balance()}")
+
     dealer.display_hands(show_total)
     player.display_hands(show_total)
 
@@ -61,6 +84,9 @@ def start_new_game():
         shoe.build()
         shoe.shuffle()
 
+    # Get bet amount
+    get_bet_amount()
+
     # Deal 2 initial cards to player and dealer
     for _ in range(2):
         player.hands[0].cards.append(shoe.deal())
@@ -80,9 +106,9 @@ def get_bet_amount():
         player.balance -= player.hands[0].bet_amount
         return
     print(f"WIN STREAK: {player.streak}\n")
-    print(f"Balance: {player.balance}")
+    print(f"Balance: {player.display_balance()}")
     while True:  # Loop until valid bet amount is entered
-        inp = input("Enter bet amount: ")
+        inp = input("Enter bet amount: $")
         if inp == "":
             player.hands[0].bet_amount = 10
             break
@@ -91,13 +117,29 @@ def get_bet_amount():
             if player.hands[0].bet_amount > player.balance:
                 raise ValueError("You don't have enough money!")
             if player.hands[0].bet_amount < MIN_BET:
-                raise ValueError(f"Minimum bet is {MIN_BET}!")
+                raise ValueError(f"Minimum bet is ${MIN_BET}!")
             break
         except ValueError as e:  # Error handling for invalid bet amount
             if str(e).startswith("invalid literal"):
                 e = "Please enter a valid number!"
             print(f"Invalid bet amount: {e}")
     player.balance -= player.hands[0].bet_amount
+
+
+def offer_insurance():
+    insurance_taken = False
+    if player.balance < int(player.hands[0].bet_amount / 2):
+        return
+    clear_screen()
+    display_all_hands()
+    if HUMAN_PLAYER:
+        if input("Would you like insurance? (y/n)") == "y":
+            insurance_taken = True
+    else:
+        insurance_taken = bot.choose_insurance_action(player.hands[0])
+    if insurance_taken:
+        player.hands[0].insured = True
+        player.balance -= int(player.hands[0].bet_amount / 2)
 
 
 # Function to handle player's turn
@@ -118,6 +160,8 @@ def player_turn():
                         break
             # Print all hands
             display_all_hands()
+            if (not dealer.hands[0].blackjack) and (player.hands[0].insured):
+                print("Dealer does not have blackjack, insurance lost!")
             if not HUMAN_PLAYER:
                 time.sleep(bot.speed / 5)
 
@@ -128,7 +172,19 @@ def player_turn():
             if not HUMAN_PLAYER:
                 action = bot.choose_hand_action(hand, dealer.hands[0].cards[0].value)
             else:
-                action = hand.get_action()
+                while True:
+                    action = hand.get_action()
+                    if not action == "help":
+                        break
+                    disp_table = {
+                        "1": "Hit",
+                        "2": "Stay",
+                        "3": "Double",
+                        "4": "Split",
+                    }
+                    print(
+                        f"Bot recommends you {disp_table[bot.choose_hand_action(hand, dealer.hands[0].cards[0].value)]}!\n"
+                    )
 
             # Perform player action
             if action == "1":  # Hit
@@ -210,6 +266,11 @@ def determine_outcomes():
             hand.outcome["message"] = f"{s}LOSE! Dealer has blackjack!"
             logger.hand_outcome = "dealer_blackjack"
             logger.win_loss = "LOSS"
+            # Return bet if insurance was taken
+            if hand.insured:
+                hand.outcome["bal_change"] += hand.bet_amount
+                player.balance += int(hand.bet_amount / 2)
+                hand.outcome["message"] = "Dealer Blackjack! Insurance paid 2:1"
         # Check for player bust loss
         elif hand.busted:
             hand.outcome["message"] = f"{s}BUSTED! :("
@@ -267,13 +328,14 @@ def game_loop():
     # Start game, deal initial cards
     start_new_game()
 
+    # Offer insurance if dealer is showing ace
+    if dealer.hands[0].cards[0].value == 1:
+        offer_insurance()
+
     # Check for blackjacks
     check_blackjacks()
 
     # ---- Player's turn ----
-
-    # Get bet amount
-    get_bet_amount()
 
     # Give player turn
     player_turn()
@@ -345,4 +407,4 @@ if player.balance < MIN_BET:
     print("You ran out of money!")
 else:
     print(f"Bot finished playing {bot.max_hands} hands")
-    print(f"Final balance: {player.balance}")
+    print(f"Final balance: {player.display_balance}")
