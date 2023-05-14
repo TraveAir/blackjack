@@ -22,8 +22,6 @@ class Shoe:
                         value = 10
                     card = Card(name, suit, value)
                     self.cards.append(card)
-        for _ in range(200):
-            self.cards.append(Card("Ace", "♥", 1))
 
     def shuffle(self):
         random.shuffle(self.cards)
