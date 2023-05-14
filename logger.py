@@ -16,6 +16,7 @@ class Logger:
         self.bot = bot
         if make_file:
             self.filepath = self.make_file_path()
+            self.initial_write()
 
     def make_file_path(self) -> str:
         base_path = os.path.dirname(os.path.realpath(__file__)) + "/gamelogs/"
@@ -42,6 +43,10 @@ class Logger:
         pth += f"{s}.txt"
 
         return pth
+
+    def initial_write(self):
+        with open(self.filepath, "w") as f:
+            f.write("Hand Number,Balance,Win/Loss,Win Streak,Hand Outcome\n")
 
     def write_to_file(self):
         s = f"{self.hand_number},{self.balance},{self.win_loss},{self.streak},{self.hand_outcome}"
