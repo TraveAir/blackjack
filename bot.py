@@ -1,7 +1,7 @@
 from hand import Hand, MIN_BET
 from card import Card
 
-BETTING_STRATEGY = "modfib"
+BETTING_STRATEGY = "flat"
 ACTION_STRATEGY = "basic"
 INSURANCE_STRATEGY = "never"
 
@@ -15,7 +15,7 @@ BOT_SPEED = 3
 class Bot:
     """Automated player using specified strategy
     BETTING_STRATEGY OPTIONS:
-    - fltbet: Always bet the minimim
+    - flat: Always bet the minimim
     - modfib: Bet a modified fibonacci sequence: 1, 1, 2, 3, 5, 5, 7, 10
 
     ACTION_STRATEGY OPTIONS:
@@ -37,7 +37,7 @@ class Bot:
 
     def choose_bet_amount(self, player) -> int:
         """Returns bet amount based on BETTING_STRATEGY"""
-        if self.betting_strategy == "fltbet":
+        if self.betting_strategy == "flat":
             """----- FLAT BET -----
             Always bet the minimum"""
             return MIN_BET
