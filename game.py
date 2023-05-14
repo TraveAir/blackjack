@@ -15,7 +15,7 @@ from bot import Bot
 """ CHANGE BETWEEN HUMAN AND BOT PLAYER HERE
     True: human player
     False: bot player"""
-HUMAN_PLAYER = False
+HUMAN_PLAYER = True
 
 
 # Display all hands for player and dealer with names
@@ -109,6 +109,8 @@ def get_bet_amount():
     print(f"Balance: {player.display_balance()}")
     while True:  # Loop until valid bet amount is entered
         inp = input("Enter bet amount: $")
+        if inp == "quit":
+            exit()
         if inp == "":
             player.hands[0].bet_amount = 10
             break
