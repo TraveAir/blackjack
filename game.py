@@ -15,7 +15,7 @@ from bot import Bot
 """ CHANGE BETWEEN HUMAN AND BOT PLAYER HERE
     True: human player
     False: bot player"""
-HUMAN_PLAYER = True
+HUMAN_PLAYER = False
 
 
 # Display all hands for player and dealer with names
@@ -83,6 +83,8 @@ def start_new_game():
         shoe.clear()
         shoe.build()
         shoe.shuffle()
+        bot.true_count = 0
+        bot.running_count = 0
 
     # Get bet amount
     get_bet_amount()
@@ -91,6 +93,11 @@ def start_new_game():
     for _ in range(2):
         player.hands[0].cards.append(shoe.deal())
         dealer.hands[0].cards.append(shoe.deal())
+
+    # Let bot update card count, excluding dealers hidden card
+    bot.update_count(player.hands[0].cards[0], shoe.size())
+    bot.update_count(player.hands[0].cards[1], shoe.size())
+    bot.update_count(dealer.hands[0].cards[0], shoe.size())
 
     # Hide dealer's second card
     dealer.hands[0].cards[1].hidden = True
@@ -104,6 +111,7 @@ def get_bet_amount():
     if not HUMAN_PLAYER:
         player.hands[0].bet_amount = bot.choose_bet_amount(player)
         player.balance -= player.hands[0].bet_amount
+        logger.true_count = bot.true_count
         return
     print(f"WIN STREAK: {player.streak}\n")
     print(f"Balance: {player.display_balance()}")
@@ -151,6 +159,7 @@ def player_turn():
             # Give card to hand if split
             if len(hand.cards) == 1:
                 hand.cards.append(shoe.deal())
+                bot.update_count(hand.cards[-1], shoe.size())
                 if hand.total() == 21:
                     break
                 # Check if aces were split
@@ -191,6 +200,7 @@ def player_turn():
             # Perform player action
             if action == "1":  # Hit
                 hand.cards.append(shoe.deal())
+                bot.update_count(hand.cards[-1], shoe.size())
                 hand.bust_check()
             elif action == "2":  # Stand
                 hand.turn_over = True
@@ -201,6 +211,7 @@ def player_turn():
                 hand.bet_amount *= 2
                 # Deal one card
                 hand.cards.append(shoe.deal())
+                bot.update_count(hand.cards[-1], shoe.size())
                 # End turn
                 hand.turn_over = True
             elif action == "4":  # Split
@@ -223,6 +234,7 @@ def player_turn():
 
 # Function to handle dealer's turn
 def dealer_turn():
+    bot.update_count(dealer.hands[0].cards[1], shoe.size())
     # Check if dealer turn is necessary
     if all(hand.busted for hand in player.hands):
         dealer.hands[0].turn_over = True
@@ -243,6 +255,7 @@ def dealer_turn():
             else:
                 time.sleep(bot.speed / 5)
             dealer.hands[0].cards.append(shoe.deal())
+            bot.update_count(dealer.hands[0].cards[-1], shoe.size())
 
         # Check for bust
         dealer.hands[0].bust_check()
@@ -409,4 +422,4 @@ if player.balance < MIN_BET:
     print("You ran out of money!")
 else:
     print(f"Bot finished playing {bot.max_hands} hands")
-    print(f"Final balance: {player.display_balance}")
+    print(f"Final balance: {player.display_balance()}")

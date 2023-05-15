@@ -1,15 +1,16 @@
 from hand import Hand, MIN_BET
 from card import Card
+from player import Player
 
 BETTING_STRATEGY = "flat"
 ACTION_STRATEGY = "basic"
 INSURANCE_STRATEGY = "never"
 
 # Bot will stop playing after this many hands
-MAX_NUM_HANDS = 1000
+MAX_NUM_HANDS = 10000
 
 # How fast cards are displayed on screen, lower is faster, 0 is instant
-BOT_SPEED = 3
+BOT_SPEED = 0
 
 
 class Bot:
@@ -17,6 +18,7 @@ class Bot:
     BETTING_STRATEGY OPTIONS:
     - flat: Always bet the minimim
     - modfib: Bet a modified fibonacci sequence: 1, 1, 2, 3, 5, 5, 7, 10
+    - mitcount: Count cards: Bet with MIT strategy of (TC-1)*min_bet
 
     ACTION_STRATEGY OPTIONS:
     - dealer_hitting: Hit with 16 or less, otherwise stay
@@ -34,8 +36,10 @@ class Bot:
         self.insurance_strategy = INSURANCE_STRATEGY
         self.max_hands = MAX_NUM_HANDS
         self.speed = BOT_SPEED
+        self.running_count = 0
+        self.true_count = 0
 
-    def choose_bet_amount(self, player) -> int:
+    def choose_bet_amount(self, player: Player) -> int:
         """Returns bet amount based on BETTING_STRATEGY"""
         if self.betting_strategy == "flat":
             """----- FLAT BET -----
@@ -47,11 +51,20 @@ class Bot:
             fib_sequence = {0: 1, 1: 1, 2: 2, 3: 3, 4: 5, 5: 5, 6: 7, 7: 10}
             spot_in_sequence = player.streak % 8
             return MIN_BET * fib_sequence[spot_in_sequence]
+        elif self.betting_strategy == "mitcount":
+            """----- MIT COUNT -----
+            When TC is less than 2, bet minimum. Otherwise, bet (TC-1)*min_bet"""
+            if self.true_count < 2:
+                return MIN_BET
+            else:
+                if player.balance < (self.true_count - 1) * 10:
+                    return player.balance
+                return (self.true_count - 1) * 10
         # ---DEFAULT---
         else:
             return MIN_BET
 
-    def choose_hand_action(self, hand, dealer_showing) -> str:
+    def choose_hand_action(self, hand: Hand, dealer_showing: Card) -> str:
         """Picks action based on ACTION_STRATEGY and returns 1/2/3/4
         Reference:
             1: Hit
@@ -176,10 +189,18 @@ class Bot:
         # ---DEFAULT---
         return ret_table["stay"]
 
-    def choose_insurance_action(self, hand) -> bool:
+    def choose_insurance_action(self, hand: Hand) -> bool:
         """Returns True or False based on INSURANCE_STRATEGY"""
         if self.insurance_strategy == "always":
             return True
         else:
             # ---DEFAULT---
             return False
+
+    def update_count(self, card: Card, shoe_size: int):
+        """Updates running count and true count based on card value"""
+        if card.value in [2, 3, 4, 5, 6]:
+            self.running_count += 1
+        elif card.value in [10, 1]:
+            self.running_count -= 1
+        self.true_count = self.running_count // (shoe_size / 52)

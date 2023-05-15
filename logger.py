@@ -9,6 +9,7 @@ class Logger:
     win_loss = ""
     streak = 0
     hand_number = 0
+    true_count = 0
 
     def __init__(self, make_file, bot, human_player):
         self.filepath = ""
@@ -46,9 +47,9 @@ class Logger:
 
     def initial_write(self):
         with open(self.filepath, "w") as f:
-            f.write("Hand Number,Balance,Win/Loss,Win Streak,Hand Outcome\n")
+            f.write("Hand Number,Balance,Win/Loss,Win Streak,True Count,Hand Outcome\n")
 
     def write_to_file(self):
-        s = f"{self.hand_number},{self.balance},{self.win_loss},{self.streak},{self.hand_outcome}"
+        s = f"{self.hand_number},{self.balance},{self.win_loss},{self.streak},{self.true_count},{self.hand_outcome}"
         with open(self.filepath, "a") as f:
             f.write(s + "\n")

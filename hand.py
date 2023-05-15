@@ -2,7 +2,7 @@ import game_util
 from card import Card
 
 # Minimum bet amount
-MIN_BET = 10
+MIN_BET = 5
 
 
 class Hand:
