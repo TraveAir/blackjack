@@ -2,12 +2,12 @@ from hand import Hand, MIN_BET
 from card import Card
 from player import Player
 
-BETTING_STRATEGY = "flat"
+BETTING_STRATEGY = "mitcount"
 ACTION_STRATEGY = "basic"
 INSURANCE_STRATEGY = "never"
 
 # Bot will stop playing after this many hands
-MAX_NUM_HANDS = 10000
+MAX_NUM_HANDS = 5000
 
 # How fast cards are displayed on screen, lower is faster, 0 is instant
 BOT_SPEED = 0

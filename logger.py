@@ -37,11 +37,11 @@ class Logger:
         pth = base_path + file_name
         x = 1
         s = ""
-        while os.path.exists(pth + f"{s}.txt"):
+        while os.path.exists(pth + f"{s}.csv"):
             s = f"({x})"
             x += 1
 
-        pth += f"{s}.txt"
+        pth += f"{s}.csv"
 
         return pth
 

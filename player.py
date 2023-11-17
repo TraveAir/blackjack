@@ -1,4 +1,4 @@
-STARTING_BALANCE = 100
+STARTING_BALANCE = 500
 
 from hand import Hand
 
